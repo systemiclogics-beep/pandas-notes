@@ -1,0 +1,657 @@
+SQL FINAL NOTES — AI/ML PRACTICE
+1. Primary Key
+
+A Primary Key (PK) uniquely identifies each row.
+
+CREATE TABLE student (
+    std_id INT PRIMARY KEY,
+    std_name VARCHAR(50)
+);
+
+Rules:
+
+Unique
+Cannot be NULL
+One table can have one primary key
+2. Foreign Key
+
+A Foreign Key (FK) connects one table to another table's Primary Key.
+
+Example:
+
+student
+std_id (PK)
+   ↑
+   |
+enrollment
+std_id (FK)
+
+A foreign-key value must normally exist in the referenced table.
+
+Why multiple foreign keys?
+
+If a table connects to two tables, it can have two foreign keys.
+
+Example:
+
+orderitem
+----------------
+orderId   (FK) → orders.orderId
+productId (FK) → product.productId
+
+orderitem needs both because it connects an order with a product.
+
+3. Basic SELECT
+
+Show everything:
+
+SELECT *
+FROM student;
+
+Show specific columns:
+
+SELECT std_name, marks
+FROM student;
+4. WHERE — Filter Rows
+
+WHERE filters individual rows.
+
+SELECT *
+FROM student
+WHERE marks > 80;
+
+Examples:
+
+WHERE marks >= 80
+WHERE marks != 50
+WHERE city = 'Delhi'
+Remember
+
+WHERE = filter rows.
+
+5. ORDER BY — Sort
+
+Ascending:
+
+SELECT *
+FROM student
+ORDER BY marks ASC;
+
+Descending:
+
+SELECT *
+FROM student
+ORDER BY marks DESC;
+
+Remember:
+
+ASC  → low → high / A → Z
+DESC → high → low / Z → A
+6. LIMIT
+
+Used to restrict the number of rows.
+
+SELECT *
+FROM student
+LIMIT 3;
+
+Top 3 highest marks:
+
+SELECT *
+FROM student
+ORDER BY marks DESC
+LIMIT 3;
+Pattern
+ORDER BY column DESC
+LIMIT 3;
+7. Aggregate Functions
+
+Aggregate functions calculate something from multiple rows.
+
+COUNT() → count
+SUM()   → total
+AVG()   → average
+MAX()   → highest
+MIN()   → lowest
+
+Examples:
+
+SELECT COUNT(*)
+FROM student;
+SELECT AVG(marks)
+FROM student;
+SELECT MAX(marks)
+FROM student;
+8. GROUP BY
+
+GROUP BY creates groups.
+
+It does NOT automatically count.
+
+Example:
+
+SELECT city, COUNT(*)
+FROM student
+GROUP BY city;
+
+Think:
+
+GROUP BY city
+      ↓
+Delhi group
+Mumbai group
+Pune group
+      ↓
+COUNT() counts each group
+Important pattern
+SELECT group_column, aggregate_function(...)
+FROM table
+GROUP BY group_column;
+
+Examples:
+
+SELECT city, COUNT(*)
+FROM student
+GROUP BY city;
+SELECT city, AVG(marks)
+FROM student
+GROUP BY city;
+SELECT department, MAX(salary)
+FROM employee
+GROUP BY department;
+Key idea
+
+GROUP BY = How should I divide the rows?
+
+Aggregate = What should I calculate for each group?
+
+9. DISTINCT
+
+DISTINCT removes duplicates.
+
+SELECT DISTINCT city
+FROM student;
+
+Another way to get unique values:
+
+SELECT city
+FROM student
+GROUP BY city;
+10. HAVING
+
+HAVING filters groups.
+
+SELECT city, COUNT(*)
+FROM student
+GROUP BY city
+HAVING COUNT(*) > 2;
+The most important difference
+WHERE  → Filter individual rows
+HAVING → Filter groups
+
+Example:
+
+WHERE marks > 80
+
+Filters students.
+
+HAVING AVG(marks) > 75
+
+Filters groups based on their average.
+
+Why not WHERE with COUNT?
+
+This is wrong:
+
+WHERE COUNT(*) > 2
+
+Because COUNT() happens as part of the grouped calculation.
+
+Use:
+
+HAVING COUNT(*) > 2;
+11. JOIN
+
+Use JOIN when you need information from multiple related tables.
+
+Example:
+
+student
+   ↓
+enrollment
+   ↓
+course
+
+If you want student name + course name:
+
+SELECT s.std_name, c.course_name
+FROM student s
+INNER JOIN enrollment e
+    ON s.std_id = e.std_id
+INNER JOIN course c
+    ON e.courseId = c.courseId;
+How to decide which tables?
+
+Ask:
+
+Where is the information I need?
+
+Then find the path connecting those tables.
+
+12. INNER JOIN
+
+Returns only matching rows.
+
+SELECT *
+FROM customer c
+INNER JOIN orders o
+    ON c.customerId = o.customerId;
+
+Think:
+
+Give me records that have a match in both tables.
+
+13. LEFT JOIN
+
+Returns all rows from the left table, even if there is no match.
+
+SELECT s.std_name, c.course_name
+FROM student s
+LEFT JOIN enrollment e
+    ON s.std_id = e.std_id
+LEFT JOIN course c
+    ON e.courseId = c.courseId;
+
+If a student has no course:
+
+Student → NULL
+Remember
+INNER JOIN → matching rows
+LEFT JOIN  → all left-table rows + matches
+14. JOIN Keys
+
+You don't have to put IDs in SELECT.
+
+IDs are often used only to connect tables:
+
+ON c.customerId = o.customerId
+
+You can select only what you need:
+
+SELECT c.name, p.productName
+Rule
+ON     → Connect tables
+SELECT → Decide what to display
+15. E-Commerce Database Relationship
+
+Our project:
+
+customer
+   |
+   | customerId
+   ↓
+orders
+   |
+   | orderId
+   ↓
+orderitem
+   |
+   | productId
+   ↓
+product
+   |
+   | categoryId
+   ↓
+category
+Primary/Foreign Keys
+customer
+customerId → PK
+
+orders
+orderId    → PK
+customerId → FK
+
+orderitem
+orderItemId → PK
+orderId     → FK
+productId   → FK
+
+product
+productId  → PK
+categoryId → FK
+
+category
+categoryId → PK
+16. Why orderitem Has Two Foreign Keys
+
+Because it connects two tables:
+
+orders
+  ↓ orderId
+orderitem
+  ↑ productId
+product
+
+One row tells us:
+
+Which order contains which product?
+
+This is a many-to-many relationship between Orders and Products.
+
+orderitem acts as the bridge.
+
+17. Subquery
+
+A subquery is a query inside another query.
+
+Example:
+
+Find students whose marks are above the average.
+
+SELECT *
+FROM student
+WHERE marks > (
+    SELECT AVG(marks)
+    FROM student
+);
+
+Think:
+
+Inner query
+    ↓
+Find average
+    ↓
+Outer query
+    ↓
+Compare marks
+
+Another:
+
+SELECT *
+FROM student
+WHERE marks = (
+    SELECT MAX(marks)
+    FROM student
+);
+Important idea
+
+Ask:
+
+What value does my outer query need?
+
+If:
+
+WHERE salary > (...)
+
+The inner query should return a salary.
+
+If:
+
+WHERE department = (...)
+
+The inner query should return a department.
+
+18. = vs IN
+=  → compare with one value
+IN → compare with multiple possible values
+
+Example:
+
+WHERE city IN ('Delhi', 'Mumbai');
+
+Means:
+
+city = Delhi
+OR
+city = Mumbai
+
+IN can also work with a subquery:
+
+WHERE courseId IN (
+    SELECT courseId
+    FROM enrollment
+    WHERE std_id = 1
+);
+
+Meaning:
+
+Find course IDs belonging to student 1, then find rows whose course ID is one of those.
+
+This was the part we had not fully cemented yet, so revisit it later rather than forcing memorization.
+
+19. ALTER TABLE
+
+Used to change an existing table.
+
+Add column
+ALTER TABLE customer
+ADD COLUMN phone VARCHAR(15);
+Delete column
+ALTER TABLE customer
+DROP COLUMN phone;
+Modify column
+ALTER TABLE customer
+MODIFY mobile VARCHAR(20) NOT NULL;
+Rename column
+
+MySQL:
+
+ALTER TABLE customer
+CHANGE phone mobile VARCHAR(15);
+
+Remember:
+
+ADD     → add column
+DROP    → remove column
+MODIFY  → change definition
+CHANGE  → rename/change column
+20. How to Decide Which SQL Tool to Use
+
+This is the most important section for you.
+
+Before writing SQL, read the meaning of the question.
+
+Question asks...	Think
+Filter rows	WHERE
+Sort	ORDER BY
+Top/first few	LIMIT
+Count/total/average	Aggregate
+Each city/course/category	GROUP BY
+Filter groups	HAVING
+Information from multiple tables	JOIN
+Keep everything from first table	LEFT JOIN
+Need another query's answer	Subquery
+Multiple possible values	IN
+Examples
+
+Top 3 highest-paid employees
+
+ORDER BY + LIMIT
+
+Number of students in each city
+
+GROUP BY + COUNT
+
+Cities with more than 5 students
+
+GROUP BY + COUNT + HAVING
+
+Student name + course name
+
+JOIN
+
+Students above average marks
+
+Subquery
+21. SQL Thinking Order
+
+When you receive a question, don't immediately type SQL.
+
+Think:
+
+Step 1 — What information do I need?
+
+Which columns?
+
+Step 2 — Which table contains them?
+
+One table or multiple?
+
+Step 3 — Do I need filtering?
+
+WHERE
+
+Step 4 — Do I need grouping?
+
+Words like:
+
+each
+per
+by category
+by city
+
+→ GROUP BY
+
+Step 5 — Am I filtering groups?
+
+→ HAVING
+
+Step 6 — Do I need sorting?
+
+→ ORDER BY
+
+Step 7 — Do I need only a few rows?
+
+→ LIMIT
+
+Step 8 — Do I need another query's result?
+
+→ Subquery
+
+22. Most Important Mental Model
+
+Remember this:
+
+WHERE
+  ↓
+Filter rows
+
+GROUP BY
+  ↓
+Create groups
+
+Aggregate
+  ↓
+Calculate something for each group
+
+HAVING
+  ↓
+Filter groups
+
+ORDER BY
+  ↓
+Sort result
+
+LIMIT
+  ↓
+Keep only some rows
+
+For joins:
+
+JOIN
+  ↓
+Bring related tables together
+
+For subqueries:
+
+Subquery
+  ↓
+Get an answer
+  ↓
+Outer query uses that answer
+23. SQL → Pandas Connection
+
+This will be very useful for your AI/ML journey.
+
+SQL	Pandas
+SELECT	df[...]
+WHERE	Boolean filtering
+ORDER BY	sort_values()
+LIMIT	head()
+COUNT()	.count()
+SUM()	.sum()
+AVG()	.mean()
+GROUP BY	.groupby()
+JOIN	.merge()
+DISTINCT	.unique() / .drop_duplicates()
+
+Example SQL:
+
+SELECT city, AVG(marks)
+FROM student
+GROUP BY city;
+
+Pandas:
+
+df.groupby("city")["marks"].mean()
+
+This is why the SQL you're learning is useful for AI/ML: databases often provide the raw data, and Pandas is then used for cleaning, exploration, and feature engineering.
+
+24. What You Have Learned So Far
+Database Fundamentals
+Primary Key
+Foreign Key
+Relationships
+One-to-many
+Many-to-many
+Bridge/junction table
+ALTER TABLE
+SQL
+SELECT
+WHERE
+ORDER BY
+LIMIT
+COUNT
+SUM
+AVG
+MIN
+MAX
+GROUP BY
+HAVING
+DISTINCT
+INNER JOIN
+LEFT JOIN
+Basic subqueries
+IN
+Practical Project
+
+You built an E-commerce database containing:
+
+customer
+category
+product
+orders
+orderitem
+
+And you've already successfully written multi-table queries involving:
+
+customer → orders → orderitem → product
+⭐ Final Rules to Memorize
+WHERE      = Filter rows
+GROUP BY   = Create groups
+HAVING     = Filter groups
+ORDER BY   = Sort
+LIMIT      = Restrict number of rows
+JOIN       = Connect tables
+LEFT JOIN  = Keep all left rows
+COUNT      = How many?
+SUM        = Total?
+AVG        = Average?
+MAX        = Highest?
+MIN        = Lowest?
+DISTINCT   = Remove duplicates
+SUBQUERY   = Query inside another query
+IN         = Match one of multiple values
+The most important one:
+
+Don't memorize SQL commands separately. Read the question, understand what it is asking, then choose the tool.
