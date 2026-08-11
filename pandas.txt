@@ -1,0 +1,1293 @@
+🐼 PANDAS COMPLETE NOTES
+For AI/ML Data Preprocessing
+1. What is Pandas?
+
+Pandas is a Python library used to:
+
+Read data
+Clean data
+Filter data
+Modify data
+Analyze data
+Prepare data for Machine Learning
+
+Think:
+
+CSV / Database
+      ↓
+   Pandas
+      ↓
+Clean + Prepare
+      ↓
+Machine Learning
+2. DataFrame vs Series
+DataFrame
+
+A DataFrame is a table.
+
+Name    Age    Salary
+Amit    25     50000
+Sara    30     60000
+John    28     55000
+
+Think:
+
+DataFrame = complete table
+
+Series
+
+A Series is basically one column.
+
+df["Age"]
+25
+30
+28
+
+Think:
+
+Series = one column
+
+3. SQL → Pandas Mental Connection
+SQL	Pandas
+SELECT	df[columns]
+WHERE	Boolean filtering
+ORDER BY	sort_values()
+LIMIT	head()
+COUNT()	count() / value_counts()
+SUM()	sum()
+AVG()	mean()
+GROUP BY	groupby()
+JOIN	merge()
+LEFT JOIN	merge(how="left")
+DISTINCT	drop_duplicates()
+IS NULL	isna()
+
+The important idea:
+
+SQL and Pandas solve many of the same data problems, but with different syntax.
+
+4. Inspecting Data
+df.head()
+
+First 5 rows.
+
+df.head(10)
+
+First 10 rows.
+
+df.tail()
+
+Last 5 rows.
+
+df.shape
+
+Returns:
+
+(rows, columns)
+
+Example:
+
+(891, 12)
+
+means:
+
+891 rows
+12 columns
+Column names
+df.columns
+Data types
+df.dtypes
+Detailed information
+df.info()
+Statistical summary
+df.describe()
+5. Selecting Columns
+
+One column:
+
+df["Age"]
+
+Returns a Series.
+
+Multiple columns:
+
+df[["Name", "Age", "Salary"]]
+
+Returns a DataFrame.
+
+Mental rule:
+
+["Age"]
+       ↓
+Series
+
+[["Age", "Salary"]]
+       ↓
+DataFrame
+6. Filtering Rows — SQL WHERE
+
+SQL:
+
+SELECT *
+FROM employees
+WHERE Age > 25;
+
+Pandas:
+
+df[df["Age"] > 25]
+What happens?
+df["Age"] > 25
+
+creates a Boolean Series:
+
+True
+False
+True
+False
+
+Then:
+
+df[condition]
+
+keeps only rows where condition is True.
+
+7. Multiple Conditions
+AND
+
+Use:
+
+&
+
+Example:
+
+df[
+    (df["Age"] >= 28) &
+    (df["Salary"] < 70000)
+]
+Important
+
+Always use parentheses around each condition:
+
+(df["Age"] >= 28) & (df["Salary"] < 70000)
+
+Not:
+
+df["Age"] >= 28 & df["Salary"] < 70000
+OR
+
+Use:
+
+|
+
+Example:
+
+df[
+    (df["City"] == "Delhi") |
+    (df["Salary"] >= 60000)
+]
+Why & and |?
+
+Pandas conditions operate on multiple values/Series.
+
+Think:
+
+Age column → True False True False
+Salary     → False True True False
+
+& combines corresponding Boolean values.
+
+8. .loc
+
+.loc is mainly label-based selection.
+
+General structure:
+
+df.loc[rows, columns]
+
+Example:
+
+df.loc[df["Salary"] >= 50000, ["Name", "City"]]
+
+Meaning:
+
+Select rows where Salary ≥ 50000 and return Name and City.
+
+.loc for modifying data
+
+This is extremely important.
+
+df.loc[df["Age"] < 25, "Age_Group"] = "Young"
+
+Meaning:
+
+Find rows where Age < 25 and put "Young" into Age_Group.
+
+Another example:
+
+mask = df["Salary"].isna()
+
+df.loc[mask, "Salary"] = 50000
+9. .iloc
+
+.iloc is integer-position based.
+
+df.iloc[0]
+
+First row.
+
+df.iloc[0:5]
+
+Rows at positions 0–4.
+
+df.iloc[0:5, 0:3]
+
+First 5 rows and first 3 columns.
+
+Mental rule:
+
+loc  → labels
+iloc → integer positions
+10. Creating Columns
+
+Pandas can perform vectorized calculations.
+
+df["Bonus"] = df["Salary"] * 0.10
+
+No for loop required.
+
+Another:
+
+df["Total_Salary"] = df["Salary"] + df["Bonus"]
+
+Think:
+
+Pandas performs the operation across the Series.
+
+11. Rename Columns
+df.rename(
+    columns={"Old_Name": "New_Name"},
+    inplace=True
+)
+
+Multiple:
+
+df.rename(
+    columns={
+        "Name": "Employee_Name",
+        "Salary": "Base_Salary"
+    },
+    inplace=True
+)
+
+Mental model:
+
+columns={"OLD": "NEW"}
+12. Delete Columns
+df.drop(columns=["Tax"])
+
+Multiple:
+
+df.drop(columns=["Tax", "Bonus"])
+
+Or modify original:
+
+df.drop(columns=["Tax"], inplace=True)
+
+Alternative:
+
+df.drop("Tax", axis=1)
+
+Remember:
+
+axis=0 → rows
+axis=1 → columns
+13. columns vs subset
+
+Very important distinction.
+
+columns=
+
+The columns themselves are the target.
+
+Example:
+
+df.drop(columns=["Age", "Salary"])
+
+Means:
+
+Delete these columns.
+
+subset=
+
+Only these columns are considered/check­ed for an operation.
+
+Example:
+
+df.dropna(subset=["Age", "Salary"])
+
+Means:
+
+Check Age and Salary when deciding which rows to drop.
+
+It does NOT delete those columns.
+
+Example:
+
+df.drop_duplicates(subset=["Name"])
+
+Means:
+
+Check Name when deciding whether rows are duplicates.
+
+Mental rule:
+
+columns → act on the columns
+
+subset → use these columns for the decision
+14. Missing Values
+
+Check missing values:
+
+df["Salary"].isna()
+
+Returns:
+
+True
+False
+True
+
+Count missing values:
+
+df["Salary"].isna().sum()
+
+Check not missing:
+
+df["Salary"].notna()
+15. Manual Missing-Value Filling
+
+This was one of the most important concepts we practiced.
+
+mask = df["Salary"].isna()
+
+df.loc[mask, "Salary"] = 50000
+
+Mental process:
+
+1. Find missing rows
+2. Create mask
+3. Use .loc
+4. Replace only those cells
+16. Filling With Median
+
+Median is often safer than mean when there are outliers.
+
+median = df["Salary"].median()
+
+mask = df["Salary"].isna()
+
+df.loc[mask, "Salary"] = median
+
+Why median?
+
+Example:
+
+40000
+45000
+50000
+50000
+1000000 ← outlier
+
+Mean gets pulled upward.
+
+Median is more resistant to outliers.
+
+17. Category Missing Values
+
+For categorical data, mode is often useful.
+
+df["City"].mode()[0]
+
+Then:
+
+df["City"] = df["City"].fillna(df["City"].mode()[0])
+
+General thinking:
+
+Numerical → mean / median
+
+Categorical → mode
+
+But the correct choice depends on the dataset.
+
+18. combine_first()
+
+Used when you want to fill missing values in one column using another column.
+
+Example:
+
+df["col1"] = df["col1"].combine_first(df["col2"])
+
+Meaning:
+
+Use col1 if value exists.
+Otherwise use col2.
+
+This is similar to:
+
+"Take the first available value."
+
+Manual .loc approach:
+
+mask = df["col1"].isna()
+
+df.loc[mask, "col1"] = df.loc[mask, "col2"]
+
+Both approaches can solve the problem.
+
+19. dropna()
+
+Drop rows containing missing values:
+
+df.dropna()
+
+Only consider certain columns:
+
+df.dropna(subset=["Age", "Salary"])
+how="all"
+df.dropna(
+    subset=["Age", "Salary"],
+    how="all"
+)
+
+Drop the row only if both Age and Salary are missing.
+
+Example:
+
+A → Age exists, Salary missing → KEEP
+B → Age missing, Salary exists → KEEP
+C → both missing → DROP
+D → both exist → KEEP
+how="any"
+df.dropna(
+    subset=["Age", "Salary"],
+    how="any"
+)
+
+Drop the row if even one is missing.
+
+20. GroupBy
+
+SQL:
+
+SELECT Department, AVG(Salary)
+FROM employees
+GROUP BY Department;
+
+Pandas:
+
+df.groupby("Department")["Salary"].mean()
+
+Mental model:
+
+GROUP BY Department
+        ↓
+Create groups
+        ↓
+Calculate something inside each group
+21. GroupBy + Sum
+
+SQL:
+
+SELECT Department, SUM(Salary)
+FROM employees
+GROUP BY Department;
+
+Pandas:
+
+df.groupby("Department")["Salary"].sum()
+22. GroupBy + Multiple Aggregations
+df.groupby("Department")["Salary"].agg(
+    Average="mean",
+    Total="sum"
+)
+
+Multiple statistics:
+
+df.groupby("Department")["Salary"].agg(
+    Average="mean",
+    Maximum="max",
+    Minimum="min",
+    Count="count"
+)
+23. GroupBy Multiple Columns
+df.groupby(
+    ["Department", "Gender"]
+)["Salary"].mean()
+
+SQL:
+
+SELECT Department, Gender, AVG(Salary)
+FROM employees
+GROUP BY Department, Gender;
+24. agg() Mental Model
+
+Use agg() when you want multiple calculations.
+
+Example:
+
+df.groupby("Department").agg(
+    Average_Salary=("Salary", "mean"),
+    Maximum_Salary=("Salary", "max"),
+    Employee_Count=("Salary", "count")
+)
+
+Think:
+
+Group
+ ↓
+Calculate several things
+ ↓
+Return summary
+25. transform()
+
+This was an important concept.
+
+groupby().mean() returns one result per group.
+
+df.groupby("Department")["Salary"].mean()
+
+Example:
+
+IT       60000
+Sales    55000
+HR       50000
+
+But:
+
+df.groupby("Department")["Salary"].transform("mean")
+
+returns one value for every original row.
+
+Example:
+
+Employee       Department    Department Mean
+
+Amit           IT            60000
+John           IT            60000
+Sara           Sales         55000
+Riya           Sales         55000
+
+Mental rule:
+
+groupby().mean()
+    ↓
+one result per group
+
+groupby().transform("mean")
+    ↓
+same length as original DataFrame
+26. Group-Wise Missing Value Filling
+
+Suppose missing salaries should use the average salary of that employee's department.
+
+First:
+
+group_mean = (
+    df.groupby("Department")["Salary"]
+      .transform("mean")
+)
+
+Now:
+
+mask = df["Salary"].isna()
+
+df.loc[mask, "Salary"] = group_mean[mask]
+
+Why group_mean[mask]?
+
+Because group_mean is a full Series with one value per row.
+
+group_mean → many values → can use [mask]
+
+median → one number → don't use [mask]
+27. map()
+
+Used for simple value → value mapping.
+
+df["Gender_Code"] = df["Gender"].map({
+    "Male": 1,
+    "Female": 0
+})
+
+Mental model:
+
+Take each value
+      ↓
+Look it up
+      ↓
+Replace it
+
+Example:
+
+Male   → 1
+Female → 0
+
+Values must match exactly.
+
+"Male" ≠ "male"
+"Large" ≠ "Large "
+
+Unmatched values generally become NaN.
+
+28. String Operations — .str
+
+Pandas uses .str for vectorized string operations.
+
+Remove spaces:
+
+df["Name"] = df["Name"].str.strip()
+
+Lowercase:
+
+df["Name"].str.lower()
+
+Uppercase:
+
+df["Name"].str.upper()
+
+Title case:
+
+df["Name"].str.title()
+
+Combine:
+
+df["Name"] = (
+    df["Name"]
+    .str.strip()
+    .str.title()
+)
+contains()
+df[df["Name"].str.contains("Amit")]
+
+SQL equivalent conceptually:
+
+WHERE Name LIKE '%Amit%'
+Split
+df["First_Name"] = df["Name"].str.split().str[0]
+
+Example:
+
+"Amit Kumar"
+      ↓
+["Amit", "Kumar"]
+      ↓
+[0]
+      ↓
+"Amit"
+29. apply()
+
+Used when you need custom logic.
+
+Example:
+
+def salary_label(salary):
+    if salary < 50000:
+        return "Low"
+    else:
+        return "High"
+
+Apply:
+
+df["Salary_Label"] = df["Salary"].apply(salary_label)
+
+Mental model:
+
+Each value
+    ↓
+Send to function
+    ↓
+Get result
+    ↓
+Store result
+30. lambda
+
+A short anonymous function.
+
+Example:
+
+df["Bonus"] = df["Salary"].apply(
+    lambda x: x * 0.10
+)
+
+Conditional:
+
+df["Salary_Label"] = df["Salary"].apply(
+    lambda x: "Low" if x < 50000 else "High"
+)
+
+Mental model:
+
+lambda x: expression
+
+Use def when logic becomes longer.
+
+31. map() vs apply()
+
+Remember this simple distinction:
+
+map()
+ ↓
+Simple mapping
+
+Male → 1
+Female → 0
+apply()
+ ↓
+Custom logic/function
+
+Salary → Low/High
+
+lambda is simply a short function often used with apply().
+
+32. astype()
+
+Used to change datatype.
+
+df["ID"] = df["ID"].astype(str)
+df["Age"] = df["Age"].astype(int)
+df["Price"] = df["Price"].astype(float)
+
+Important:
+
+Conversion must actually be possible.
+
+This can fail:
+
+25
+30
+unknown
+df["Age"].astype(int)
+
+because "unknown" cannot become an integer.
+
+Why convert numbers to strings?
+
+Suppose:
+
+df["Employee_ID"].astype(str)
+
+This is useful when constructing:
+
+101_IT
+102_Sales
+
+Example:
+
+df["Employee_Code"] = (
+    df["Employee_ID"].astype(str)
+    + "_"
+    + df["Department"].astype(str)
+)
+33. Merge / JOIN
+
+SQL and Pandas connection:
+
+SQL	Pandas
+INNER JOIN	how="inner"
+LEFT JOIN	how="left"
+RIGHT JOIN	how="right"
+FULL OUTER JOIN	how="outer"
+
+Basic:
+
+employees.merge(
+    departments,
+    on="Dept_ID",
+    how="inner"
+)
+LEFT JOIN
+employees.merge(
+    departments,
+    on="Dept_ID",
+    how="left"
+)
+RIGHT JOIN
+employees.merge(
+    departments,
+    on="Dept_ID",
+    how="right"
+)
+Different column names
+
+If left table has:
+
+Dept_ID
+
+and right table has:
+
+Department_ID
+
+use:
+
+employees.merge(
+    departments,
+    left_on="Dept_ID",
+    right_on="Department_ID",
+    how="inner"
+)
+
+Mental rule:
+
+Same column names?
+    ↓
+on="..."
+
+Different names?
+    ↓
+left_on="..."
+right_on="..."
+34. DateTime
+
+Convert string to datetime:
+
+df["Date"] = pd.to_datetime(df["Date"])
+
+After conversion:
+
+object/string
+      ↓
+datetime64[ns]
+35. Different Date Formats
+
+Examples:
+
+25-07-2026
+07/25/2026
+2026-07-25
+
+Specify format when appropriate.
+
+format="%d-%m-%Y"
+format="%m/%d/%Y"
+format="%Y-%m-%d"
+
+Important symbols:
+
+Symbol	Meaning
+%d	day
+%m	month
+%Y	four-digit year
+%y	two-digit year
+36. Invalid Dates
+
+Example:
+
+2026-07-25
+Unknown
+2026-08-01
+
+Use:
+
+df["Date"] = pd.to_datetime(
+    df["Date"],
+    errors="coerce"
+)
+
+Invalid values become:
+
+NaT
+
+Think:
+
+NaN → missing numerical value
+
+NaT → missing datetime value
+37. Missing Dates
+
+Check:
+
+df["Date"].isna()
+
+Fill:
+
+df["Date"] = df["Date"].fillna(
+    pd.Timestamp("2026-01-01")
+)
+38. Extract Date Information
+
+After conversion:
+
+df["Date"].dt.year
+df["Date"].dt.month
+df["Date"].dt.day
+df["Date"].dt.day_name()
+df["Date"].dt.month_name()
+
+Mental model:
+
+String column → .str
+
+Datetime column → .dt
+39. Date Difference
+today = pd.Timestamp("2026-07-25")
+
+df["Days_Since"] = (
+    today - df["Date"]
+).dt.days
+
+Conceptually:
+
+Date - Date
+    ↓
+Timedelta
+    ↓
+.dt.days
+    ↓
+number of days
+
+Very useful for ML features:
+
+Days since last login
+Customer age
+Days since purchase
+Employee experience
+40. Sorting
+
+Ascending:
+
+df.sort_values("Salary")
+
+Descending:
+
+df.sort_values(
+    "Salary",
+    ascending=False
+)
+
+Multiple columns:
+
+df.sort_values(
+    ["Department", "Salary"]
+)
+
+Different directions:
+
+df.sort_values(
+    ["Department", "Salary"],
+    ascending=[True, False]
+)
+
+SQL:
+
+ORDER BY Salary DESC;
+
+Pandas:
+
+df.sort_values("Salary", ascending=False)
+41. value_counts()
+
+Counts how often each unique value occurs.
+
+df["Department"].value_counts()
+
+Example:
+
+IT       8
+Sales    6
+HR       5
+Finance  4
+
+SQL equivalent:
+
+SELECT Department, COUNT(*)
+FROM employees
+GROUP BY Department;
+Include missing values
+
+Normally missing values are ignored.
+
+df["Department"].value_counts(
+    dropna=False
+)
+Percentages
+df["Department"].value_counts(
+    normalize=True
+)
+42. Pivot Tables
+
+Pivot table = grouped summary presented as rows and columns.
+
+Basic:
+
+pd.pivot_table(
+    df,
+    values="Salary",
+    index="Department",
+    columns="Gender",
+    aggfunc="mean"
+)
+
+Think of the four parts:
+
+values   → What am I calculating?
+
+index    → What should be rows?
+
+columns  → What should become columns?
+
+aggfunc  → How should I calculate?
+Example
+pd.pivot_table(
+    df,
+    values="Salary",
+    index="Department",
+    columns="Gender",
+    aggfunc="sum"
+)
+
+Can change:
+
+aggfunc="mean"
+
+to:
+
+aggfunc="sum"
+
+or:
+
+aggfunc="count"
+Missing combinations
+
+Use:
+
+fill_value=0
+
+Example:
+
+pd.pivot_table(
+    df,
+    values="Salary",
+    index="Department",
+    columns="Gender",
+    aggfunc="count",
+    fill_value=0
+)
+Multiple aggregations
+pd.pivot_table(
+    df,
+    values="Salary",
+    index="Department",
+    columns="Gender",
+    aggfunc=["mean", "sum"]
+)
+43. groupby() vs Pivot Table
+
+groupby():
+
+df.groupby(
+    ["Department", "Gender"]
+)["Salary"].mean()
+
+Gives a grouped/vertical result.
+
+Pivot:
+
+pd.pivot_table(
+    df,
+    values="Salary",
+    index="Department",
+    columns="Gender",
+    aggfunc="mean"
+)
+
+Gives a more visual rows × columns result.
+
+Mental model:
+
+Pivot Table
+    ≈
+GroupBy + reshape
+44. Feature Engineering Connection
+
+Feature engineering means:
+
+Creating useful new features from existing data to help a Machine Learning model.
+
+Examples:
+
+df["Bonus"] = df["Salary"] * 0.10
+df["Age_Group"] = ...
+df["Salary_vs_Department_Avg"] = (
+    df["Salary"]
+    -
+    df.groupby("Department")["Salary"].transform("mean")
+)
+
+Date feature:
+
+df["Joining_Year"] = df["Joining_Date"].dt.year
+
+String feature:
+
+df["First_Name"] = df["Name"].str.split().str[0]
+
+The important point:
+
+Feature engineering is not just learning more Pandas functions. It is deciding what useful information can be extracted from the data.
+
+45. Most Important Mental Patterns
+
+These are worth remembering.
+
+Pattern 1 — Filter
+df[condition]
+Pattern 2 — Modify selected rows
+df.loc[condition, "column"] = value
+Pattern 3 — Group and calculate
+df.groupby("column")["value"].mean()
+Pattern 4 — Group and calculate multiple things
+df.groupby("column").agg(...)
+Pattern 5 — Group and broadcast result
+df.groupby("column")["value"].transform("mean")
+Pattern 6 — Map values
+df["new"] = df["old"].map({...})
+Pattern 7 — Custom logic
+df["new"] = df["old"].apply(function)
+Pattern 8 — Clean strings
+df["Name"] = df["Name"].str.strip().str.title()
+Pattern 9 — Join tables
+df1.merge(
+    df2,
+    on="key",
+    how="left"
+)
+Pattern 10 — Work with dates
+df["Date"] = pd.to_datetime(
+    df["Date"],
+    errors="coerce"
+)
+46. Common Beginner Mistakes We Encountered
+❌ Forgetting parentheses around conditions
+
+Wrong:
+
+df["Age"] > 25 & df["Salary"] < 50000
+
+Correct:
+
+(df["Age"] > 25) & (df["Salary"] < 50000)
+❌ Using and / or
+
+Don't use:
+
+df["Age"] > 25 and df["Salary"] > 50000
+
+Use:
+
+(df["Age"] > 25) & (df["Salary"] > 50000)
+❌ Confusing .str and .str()
+
+Wrong:
+
+df["Name"].str().strip()
+
+Correct:
+
+df["Name"].str.strip()
+❌ Forgetting that strings are case-sensitive
+"Small" != "small"
+
+Clean first if necessary:
+
+df["Size"] = (
+    df["Size"]
+    .str.strip()
+    .str.title()
+)
+❌ Treating a scalar like a Series
+
+This is wrong:
+
+median[mask]
+
+if:
+
+median = df["Age"].median()
+
+because median is one number.
+
+Correct:
+
+df.loc[mask, "Age"] = median
+
+But this can work:
+
+group_mean[mask]
+
+because transform() returns a Series with one value per row.
+
+❌ Accidentally overwriting original data
+
+Instead of:
+
+df["Salary"] = df["Salary"].apply(salary_label)
+
+often better:
+
+df["Salary_Label"] = df["Salary"].apply(salary_label)
+
+unless you actually want to replace Salary.
+
+❌ Forgetting quotes around column names
+
+Wrong:
+
+df[size]
+
+Correct:
+
+df["Size"]
+❌ Mixing assignment and display
+
+Keep operations separate:
+
+df["Year"] = df["Date"].dt.year
+df.dtypes
+df
+47. The Most Important Overall Mental Model
+
+Don't memorize 50 functions.
+
+When you receive a dataset, think:
+
+             DATASET
+                ↓
+       1. Understand it
+                ↓
+       info / describe / shape
+                ↓
+       2. Select what I need
+                ↓
+       columns / loc / iloc
+                ↓
+       3. Filter rows
+                ↓
+       Boolean masks
+                ↓
+       4. Clean it
+                ↓
+       missing values / strings / dates
+                ↓
+       5. Summarize it
+                ↓
+       groupby / agg / pivot
+                ↓
+       6. Combine data
+                ↓
+       merge
+                ↓
+       7. Create useful features
+                ↓
+       calculations / transform / map / apply
+                ↓
+          ML DATASET
